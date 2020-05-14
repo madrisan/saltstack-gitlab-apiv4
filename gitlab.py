@@ -16,7 +16,6 @@ Copyright (C) 2020 Davide Madrisan <davide.madrisan@gmail.com>
 
 # Import Python libs
 from __future__ import absolute_import
-import logging
 
 # Import Salt libs
 import salt.config
@@ -30,8 +29,6 @@ try:
     HAS_LIBS = True
 except Exception:
     HAS_LIBS = False
-
-log = logging.getLogger(__name__)
 
 __virtualname__ = 'gitlab'
 
