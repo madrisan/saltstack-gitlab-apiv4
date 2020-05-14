@@ -29,50 +29,42 @@ This Python module should be saved as `salt/_modules/gitlab.py`.
 |               | - `verify` (*bool*\|*str*): Whether SSL certificates should be validated or the path to a CA file,|
 |               | - `cert`: if string, path to ssl client cert file (`.pem`). If tuple, ('cert', 'key') pair.       |
 
-### http_delete
+#### `http_delete` make a DELETE request to the Gitlab server
 
-Make a DELETE request to the Gitlab server.
-
-    def http_delete(path, **kwargs)
+    http_delete(path, **kwargs)
     
-### http_get
+#### `http_get` send a GET request to the Gitlab server
 
-Send a GET request to GitLab API.
+    http_get(path, **kwargs)
 
-    def http_get(path, **kwargs)
+#### `http_post` send a POST request to the Gitlab server
 
-### http_post
+    http_post(path, data=None, json=None, **kwargs)
 
-Send a POST request to GitLab API.
+#### `http_put` send a PUT request to the Gitlab server
 
-    def http_post(path, data=None, json=None, **kwargs)
-
-### http_put
-
-Send a PUT request to GitLab API.
-
-    def http_put(path, data=None, json=None, **kwargs)
+    http_put(path, data=None, json=None, **kwargs)
 
 ## Usage example from another execution module
 
-Here's an example of the usage of this module from another salt execution module:
+1 . An example of the usage of a GET requests from another salt execution module:
+
 ```python
-import logging
-
-log = logging.getLogger(__name__)
-
-def get_user_id(username):
+def project_variables(project_id):
     """
-    Return the GitLab informations for a given user.
+    Return the GitLab variable informations for a given project.
     """
-    resource = '/users?username={0}'.format(username)
+    project_variables = {}
+    resource = '/projects/{0}/variables'.format(project_id)
+
     try:
-        response = __salt__['gitlab.http_get'](resource)
-        user_id = response[0].get('id', None)
-    except:
-        log.warning(('Cannot find in GitLab the user id of {0}'
-                     .format(username)))
-        user_id = None
-
-    return user_id
+        res = __salt__['gitlab.http_get'](resource)
+        for data in res:
+           key = data['key']
+           data.pop('key')
+           project_variables[key] = data
+    except KeyError as err:
+        template = "An exception of type {0} occurred. Arguments: {1!r}"
+        message = template.format(type(err).__name__, err.args)
+        raise salt.exceptions.CommandExecutionError(message)
 ```
