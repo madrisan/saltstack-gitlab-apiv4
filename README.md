@@ -6,6 +6,8 @@
 
 A SaltStack extension module for interacting with GitLab API v4.
 
+![](images/gitlab_logo.png?raw=true)
+
 GitLab API documentation: <https://docs.gitlab.com/ee/api>
 
 This module requires a configuration profile to be configured in either the minion or, as in our implementation, in the master configuration file (`/etc/salt/master.d/gitlab.conf`).
