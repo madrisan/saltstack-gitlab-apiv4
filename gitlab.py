@@ -1,4 +1,4 @@
-'''
+"""
 Module for interacting with the GitLab APIs v4
 
 Copyright (C) 2020 Davide Madrisan <davide.madrisan@gmail.com>
@@ -12,12 +12,11 @@ Copyright (C) 2020 Davide Madrisan <davide.madrisan@gmail.com>
         gitlab:
           api_url: https://gitlab.example.com
           token: peWcBiMOS9HrZG15peWc
-'''
+"""
 
 # Import Python libs
 from __future__ import absolute_import
 import logging
-import requests
 
 # Import Salt libs
 import salt.config
@@ -26,12 +25,11 @@ import salt.utils.url
 from salt.exceptions import SaltInvocationError
 
 # Import third party libs
-HAS_LIBS = False
 try:
     import requests
     HAS_LIBS = True
 except Exception:
-    pass
+    HAS_LIBS = False
 
 log = logging.getLogger(__name__)
 
@@ -39,9 +37,9 @@ __virtualname__ = 'gitlab'
 
 
 def __virtual__():
-    '''
+    """
     Only load this module if Python requests is installed on this minion.
-    '''
+    """
     if HAS_LIBS:
         return __virtualname__
     return (False, 'The {0} execution module cannot be loaded: '
@@ -50,11 +48,11 @@ def __virtual__():
 
 
 def _get_config():
-    '''
+    """
     Retrieves and return the GitLab's configuration.
 
     :return:            A dictionary containing the GitLab configuration
-    '''
+    """
     try:
         master_opts = salt.config.client_config('/etc/salt/master')
     except Exception as err:
@@ -72,9 +70,9 @@ def _http_request(method,
                   verify=True,
                   cert=None,
                   json=None):
-    '''
+    """
     Return the result of a query to GitLab API.
-    '''
+    """
     gitlab_config = _get_config()
 
     api_url = gitlab_config.get('api_url')
@@ -117,16 +115,16 @@ def _http_request(method,
 
 
 def http_delete(path, **kwargs):
-    '''
+    """
     Make a DELETE request to the Gitlab server.
-    '''
+    """
     return _http_request('delete', path, **kwargs)
 
 
 def http_get(path, **kwargs):
-    '''
+    """
     Send a GET request to GitLab API.
-    '''
+    """
     streamed = kwargs.get('stream', False)
     response = _http_request('get', path, **kwargs)
     if (response.headers["Content-Type"] == "application/json"
@@ -142,9 +140,9 @@ def http_get(path, **kwargs):
 
 
 def http_post(path, data=None, json=None, **kwargs):
-    '''
+    """
     Send a POST request to GitLab API.
-    '''
+    """
     response = _http_request('post', path, data=data, json=json, **kwargs)
     try:
         if response.headers.get("Content-Type") == "application/json":
@@ -157,9 +155,9 @@ def http_post(path, data=None, json=None, **kwargs):
 
 
 def http_put(path, data=None, json=None, **kwargs):
-    '''
+    """
     Send a PUT request to GitLab API.
-    '''
+    """
     response = _http_request('put', path, data=data, json=json, **kwargs)
     try:
         return response.json()
