@@ -49,7 +49,7 @@ This Python module should be saved as `salt/_modules/gitlab.py`.
 
 ## Usage example from another execution module
 
-1 . An example of the usage of a GET requests from another salt execution module:
+1 . An example of the usage of a GET request from another salt execution module:
 
 ```python
 def project_variables(project_id):
@@ -69,4 +69,42 @@ def project_variables(project_id):
         template = "An exception of type {0} occurred. Arguments: {1!r}"
         message = template.format(type(err).__name__, err.args)
         raise salt.exceptions.CommandExecutionError(message)
+```
+2. An example of a POST request:
+
+```python
+def project_create_variable(project_id,
+                            key,
+                            value,
+                            masked=False,
+                            protected=False,
+                            variable_type='env_var'):
+    """
+    Create a new GitLab project variable.
+    """
+    resource = '/projects/{0}/variables'.format(project_id)
+    post_data = {
+        'key': key,
+        'value': value,
+        'masked': masked,
+        'protected': protected,
+        'variable_type': variable_type
+    }
+ 
+    return __salt__['gitlab.http_post'](resource, json=post_data)
+```
+
+3. An example of a PUT request:
+
+```python
+def project_remove_variable(project_id, key):
+    """
+    Remove a GitLab project variable.
+    """
+    resource = ('/projects/{0}/variables/{1}'
+                .format(project_id,
+                        key))
+
+    http_delete(resource)
+    return {}
 ```
