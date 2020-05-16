@@ -105,6 +105,6 @@ def project_remove_variable(project_id, key):
                 .format(project_id,
                         key))
 
-    http_delete(resource)
+    __salt__['gitlab.http_delete'](resource)
     return {}
 ```
