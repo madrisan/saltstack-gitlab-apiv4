@@ -20,35 +20,24 @@ from __future__ import absolute_import
 # Import Salt libs
 import salt.config
 import salt.exceptions
-import salt.utils.url
+import salt.utils.http
 from salt.exceptions import SaltInvocationError
 
-# Import third party libs
-try:
-    import requests
-    HAS_LIBS = True
-except Exception:
-    HAS_LIBS = False
+# Import 3rd-party libs
+import salt.ext.six.moves.http_client
+from salt.ext import six
+from salt.ext.six.moves.urllib.parse import urljoin as _urljoin
 
 __virtualname__ = 'gitlab'
 
 
 def __virtual__():
-    """
-    Only load this module if Python requests is installed on this minion.
-    """
-    if HAS_LIBS:
-        return __virtualname__
-    return (False, 'The {0} execution module cannot be loaded: '
-            'Python requests library is not installed.'
-            .format(__virtualname__))
+    return __virtualname__
 
 
 def _get_config():
     """
     Retrieves and return the GitLab's configuration.
-
-    :return:            A dictionary containing the GitLab configuration
     """
     try:
         master_opts = salt.config.client_config('/etc/salt/master')
@@ -62,14 +51,15 @@ def _get_config():
 def _http_request(method,
                   path,
                   data=None,
+                  formdata=False,
+                  formdata_fieldname=None,
                   stream=False,
-                  timeout=None,
-                  verify=True,
-                  cert=None,
-                  json=None):
-    """
+                  streaming_callback=None,
+                  verify_ssl=True,
+                  cert=None):
+    '''
     Return the result of a query to GitLab API.
-    """
+    '''
     gitlab_config = _get_config()
 
     api_url = gitlab_config.get('api_url')
@@ -80,84 +70,79 @@ def _http_request(method,
     if not token:
         raise SaltInvocationError('No GitLab Token found')
 
+    decode = True
+    if method == 'DELETE':
+        decode = False
+
+    ca_bundle = None
     ca_certs = gitlab_config.get('ca_certs', None)
-    if ca_certs and verify == True:
-        verify = ca_certs
+    if ca_certs and verify_ssl == True:
+        ca_bundle = ca_certs
 
-    headers = {
-        'PRIVATE-TOKEN': token,
-        'Content-Type': 'application/json' }
+    url = _urljoin(api_url, '/api/v4' + six.text_type(path))
+    log.warning(url)
 
-    if not path.startswith('/'):
-        path = '/{}'.format(path)
-    url = "{0}/api/v4{1}".format(api_url, path)
+    headers = {'PRIVATE-TOKEN': token}
+    if method != 'POST':
+        headers['Content-Type'] = 'application/json'
 
-    response = requests.request(method,
-                                url,
-                                data=data,
-                                headers=headers,
-                                timeout=timeout,
-                                stream=stream,
-                                verify=verify,
-                                cert=cert,
-                                json=json)
-
-    if response.status_code == requests.codes.not_found:
-       return {}
-
-    if response.status_code != requests.codes.ok:
-        response.raise_for_status()
-
+    response = salt.utils.http.query(url,
+                                     method,
+                                     ca_bundle=ca_bundle,
+                                     data=data,
+                                     decode=decode,
+                                     decode_type='auto',
+                                     formdata=formdata,
+                                     formdata_fieldname=formdata_fieldname,
+                                     header_dict=headers,
+                                     status=True,
+                                     stream=stream,
+                                     streaming_callback=streaming_callback,
+                                     text=True,
+                                     opts=__opts__,
+                                     )
     return response
 
 
 def http_delete(path, **kwargs):
-    """
+    '''
     Make a DELETE request to the Gitlab server.
-    """
-    return _http_request('delete', path, **kwargs)
+    '''
+    return _http_request('DELETE', path, **kwargs)
 
 
 def http_get(path, **kwargs):
-    """
+    '''
     Send a GET request to GitLab API.
-    """
+    '''
+    response = _http_request('GET', path, **kwargs)
+
     streamed = kwargs.get('stream', False)
-    response = _http_request('get', path, **kwargs)
-    if (response.headers["Content-Type"] == "application/json"
-        and not streamed):
-        try:
-            return response.json()
-        except Exception as err:
-            raise SaltInvocationError(
-                      'Failed to parse the GET server message: {}'.format(err)
-            )
-    else:
+    if streamed:
         return response
 
+    if response.get('status', None) != salt.ext.six.moves.http_client.OK:
+        raise SaltInvocationError(response.get('error'))
 
-def http_post(path, data=None, json=None, **kwargs):
-    """
+    return response['dict']
+
+
+def http_post(path, data=None, **kwargs):
+    '''
     Send a POST request to GitLab API.
-    """
-    response = _http_request('post', path, data=data, json=json, **kwargs)
-    try:
-        if response.headers.get("Content-Type") == "application/json":
-            return response.json()
-    except Exception as err:
-        raise SaltInvocationError(
-                  'Failed to parse the POST server message: {}'.format(err))
+    '''
+    response = _http_request('POST',
+                             path,
+                             data=data,
+                             **kwargs)
+    if response.get('status', None) != salt.ext.six.moves.http_client.CREATED:
+        raise SaltInvocationError(response.get('error'))
 
-    return response
+    return response.get('dict', {})
 
 
-def http_put(path, data=None, json=None, **kwargs):
-    """
+def http_put(path, data=None, **kwargs):
+    '''
     Send a PUT request to GitLab API.
-    """
-    response = _http_request('put', path, data=data, json=json, **kwargs)
-    try:
-        return response.json()
-    except Exception as err:
-        raise SaltInvocationError(
-                  'Failed to parse the PUT server message: {}'.format(err))
+    '''
+    return _http_request('PUT', path, data=data, **kwargs)

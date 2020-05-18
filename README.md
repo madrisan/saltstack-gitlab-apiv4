@@ -41,17 +41,19 @@ This Python module should be saved as `salt/_modules/gitlab.py`.
 
 #### `http_post` send a POST request to the Gitlab server
 
-    http_post(path, data=None, json=None, **kwargs)
+    http_post(path, data=None, **kwargs)
 
 #### `http_put` send a PUT request to the Gitlab server
 
-    http_put(path, data=None, json=None, **kwargs)
+    http_put(path, data=None, **kwargs)
 
 ## Usage example from another execution module
 
 1 . An example of the usage of a GET request from another salt execution module:
 
 ```python
+from salt.exceptions import SaltInvocationError
+
 def project_variables(project_id):
     """
     Return the GitLab variable informations for a given project.
@@ -68,7 +70,7 @@ def project_variables(project_id):
     except KeyError as err:
         template = "An exception of type {0} occurred. Arguments: {1!r}"
         message = template.format(type(err).__name__, err.args)
-        raise salt.exceptions.CommandExecutionError(message)
+        raise SaltInvocationError(message)
 ```
 2. An example of a POST request:
 
@@ -76,31 +78,36 @@ def project_variables(project_id):
 def project_create_variable(project_id,
                             key,
                             value,
+                            formdata=False,
+                            formdata_fieldname=None,
                             masked=False,
                             protected=False,
-                            variable_type='env_var'):
+                            variable_type='env_var',
+                            **kwargs):
     """
     Create a new GitLab project variable.
     """
     resource = '/projects/{0}/variables'.format(project_id)
     post_data = {
         'key': key,
-        'value': value,
         'masked': masked,
         'protected': protected,
+        'value': value,
         'variable_type': variable_type
     }
- 
-    return __salt__['gitlab.http_post'](resource, json=post_data)
+    if formdata and formdata_fieldname:
+        post_data['formdata'] = True
+        post_data['formdata_fieldname'] = formdata_fieldname
+    elif formdata and not formdata_fieldname:
+        raise SaltInvocationError(
+                  'formdata_fieldname must be set if formdata=True')
+    return __salt__['gitlab.http_post'](resource, data=post_data)
 ```
 
 3. An example of a PUT request:
 
 ```python
 def project_remove_variable(project_id, key):
-    """
-    Remove a GitLab project variable.
-    """
     resource = ('/projects/{0}/variables/{1}'
                 .format(project_id,
                         key))
