@@ -57,9 +57,9 @@ def _http_request(method,
                   streaming_callback=None,
                   verify_ssl=True,
                   cert=None):
-    '''
+    """
     Return the result of a query to GitLab API.
-    '''
+    """
     gitlab_config = _get_config()
 
     api_url = gitlab_config.get('api_url')
@@ -105,16 +105,16 @@ def _http_request(method,
 
 
 def http_delete(path, **kwargs):
-    '''
+    """
     Make a DELETE request to the Gitlab server.
-    '''
+    """
     return _http_request('DELETE', path, **kwargs)
 
 
 def http_get(path, **kwargs):
-    '''
+    """
     Send a GET request to GitLab API.
-    '''
+    """
     response = _http_request('GET', path, **kwargs)
 
     streamed = kwargs.get('stream', False)
@@ -128,9 +128,9 @@ def http_get(path, **kwargs):
 
 
 def http_post(path, data=None, **kwargs):
-    '''
+    """
     Send a POST request to GitLab API.
-    '''
+    """
     response = _http_request('POST',
                              path,
                              data=data,
@@ -142,7 +142,7 @@ def http_post(path, data=None, **kwargs):
 
 
 def http_put(path, data=None, **kwargs):
-    '''
+    """
     Send a PUT request to GitLab API.
-    '''
+    """
     return _http_request('PUT', path, data=data, **kwargs)

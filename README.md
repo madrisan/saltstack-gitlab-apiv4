@@ -2,7 +2,6 @@
 
 [![License](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](https://spdx.org/licenses/Apache-2.0.html)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/34d9d4b1414c4d24a65bf1c4172ef636)](https://www.codacy.com/manual/madrisan/saltstack-gitlab-apiv4?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=madrisan/saltstack-gitlab-apiv4&amp;utm_campaign=Badge_Grade)
-[![Maintainability](https://api.codeclimate.com/v1/badges/55c3b99a3c91820304be/maintainability)](https://codeclimate.com/github/madrisan/saltstack-gitlab-apiv4/maintainability)
 
 A SaltStack extension module for interacting with GitLab API v4.
 
@@ -20,16 +19,17 @@ This Python module should be saved as `salt/_modules/gitlab.py`.
 
 ## Implemented Methods
 
-| Parameter     | Description                                                             |
-|:--------------|:------------------------------------------------------------------------|
-| path (*str*)  | Path to query (e.g. '`/projects`'),                                     |
-| data (*dict*) | Data to send as query parameters,                                       |
-| json (*dict*) | Data to send in the body,                                               |
-| **kwargs      | Optional arguments that `request` takes:                                |
-|               | - `timeout` (*float*): Timeout to use for requests to the GitLab server,|
-|               | - `stream` (*bool*): Whether the data should be streamed,               |
-|               | - `verify` (*bool*\|*str*): Whether SSL certificates should be validated or the path to a CA file,|
-|               | - `cert`: if string, path to ssl client cert file (`.pem`). If tuple, ('cert', 'key') pair.       |
+| Parameter     | Description                                                                  |
+|:--------------|:-----------------------------------------------------------------------------|
+| path (*str*)  | Path to query (e.g. '`/projects`'),                                          |
+| data (*dict*) | Data to send in the body,                                                    |
+| **kwargs      | Optional arguments that `_http_request` takes:                               |
+|               | - `formdata` (*bool*): The data is part of a form,                           |
+|               | - `formdata_fieldname` (*string*): The field name of the form,               |
+|               | - `stream` (*bool*): Whether the data should be streamed,                    |
+|               | - `streaming_callback` (*function*): Callback function for stream processing,|
+|               | - `verify_ssl` (*bool*\|*str*): Whether SSL certificates should be validated or the path to a CA file,|
+|               | - `cert` (*string*): Path to ssl client cert file (`.pem`).                  |
 
 #### `http_delete` make a DELETE request to the Gitlab server
 
