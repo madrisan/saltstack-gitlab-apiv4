@@ -71,6 +71,8 @@ def project_variables(project_id):
         template = "An exception of type {0} occurred. Arguments: {1!r}"
         message = template.format(type(err).__name__, err.args)
         raise SaltInvocationError(message)
+
+    return project_variables
 ```
 2. An example of a POST request:
 
@@ -101,6 +103,7 @@ def project_create_variable(project_id,
     elif formdata and not formdata_fieldname:
         raise SaltInvocationError(
                   'formdata_fieldname must be set if formdata=True')
+
     return __salt__['gitlab.http_post'](resource, data=post_data)
 ```
 
@@ -108,10 +111,78 @@ def project_create_variable(project_id,
 
 ```python
 def project_remove_variable(project_id, key):
+    """
+    Delete a GitLab project variable.
+    """
     resource = ('/projects/{0}/variables/{1}'
                 .format(project_id,
                         key))
 
     __salt__['gitlab.http_delete'](resource)
+
     return {}
+```
+
+4. An example of a GET request with streamed data:
+
+```python
+# Import Python libs
+import os
+import zipfile
+
+# Import Salt libs
+import salt.utils.files
+from salt.exceptions import SaltInvocationError
+
+def get_artifact(project, job, destfile):
+    """
+    Download a GitLab artifact and save it as 'destfile'.
+
+    Example:
+        get_artifact(1234, 567890, "/data/artifact.zip")
+    """
+    def _file_unlink(filename):
+        """
+        Remove the local file 'filename'.
+        """
+        try:
+            os.unlink(filename)
+        except:
+            pass
+
+    resource = ('/projects/{0}/jobs/{1}/artifacts/'
+                .format(project, job))
+
+    _file_unlink(destfile)
+    try:
+        # we set stream=True so that requests doesn't download
+        # the whole image into memory first.
+        destfp = salt.utils.files.fopen(destfile, 'wb')
+        def on_chunk(chunk):
+            destfp.write(chunk)
+
+        response = __salt__['gitlab.http_get'](resource,
+                                               stream=True,
+                                               streaming_callback=on_chunk)
+        destfp.close()
+    except Exception as err:
+        raise SaltInvocationError((
+            'Cannot download the artifact from GitLab (job: {0}): {1}'
+            .format(job, err)))
+
+    try:
+        archive = zipfile.ZipFile(destfile)
+    except Exception as err:
+        raise SaltInvocationError((
+            'Error opening the download artifact: {0}'
+            .format(err)))
+
+    if archive.testzip() is not None:
+        _file_unlink(destfile)
+        raise SaltInvocationError(
+            'The zip archive is corrupted. Removing it.')
+
+    return {
+        "artifact": destfile
+    }
 ```
