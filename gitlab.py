@@ -188,3 +188,36 @@ def project_remove_variable(project_id, key):
 
     http_delete(resource)
     return {}
+
+def project_update_variable(project_id, key, **kwargs):
+    '''
+    Update an existing GitLab project variable.
+
+    CLI Example:
+
+        .. code-block:: bash
+
+            salt * ugitlab.project_update_variable 1 NEW_VARIABLE value='updated value' protected=True
+    '''
+    resource = '/projects/{0}/variables/{1}'.format(project_id, key)
+
+    params = [
+        'environment_scope',
+        'masked',
+        'protected',
+        'value',
+        'variable_type'
+    ]
+    post_data = {}
+    for param in params:
+        try:
+            value = kwargs.pop(param)
+            post_data[param] = value
+        except:
+            pass
+
+    # add the all the kwargs but the ones automatically set by salt
+    extra_args = dict(
+        [(x, y) for x, y in kwargs.items() if not x.startswith('__')])
+
+    return http_put(resource, data=post_data, **extra_args)
