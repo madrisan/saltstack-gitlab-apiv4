@@ -221,3 +221,21 @@ def project_update_variable(project_id, key, **kwargs):
         [(x, y) for x, y in kwargs.items() if not x.startswith('__')])
 
     return http_put(resource, data=post_data, **extra_args)
+
+def project_set_variable(project_id, key, value, **kwargs):
+    '''
+    Update an existing GitLab project variable or create a new one otherwise.
+
+    CLI Example:
+
+        .. code-block:: bash
+
+            salt * ugitlab.project_set_variable 1 NEW_VARIABLE 'my value'
+    '''
+    variables = project_variables(project_id)
+    if key in variables:
+        kwargs['value'] = value
+        result = project_update_variable(project_id, key, **kwargs)
+    else:
+        result = project_create_variable(project_id, key, value, **kwargs)
+    return result
