@@ -2,6 +2,7 @@
 Module for interacting with the GitLab APIs v4
 
 Copyright (C) 2020 Davide Madrisan <davide.madrisan@gmail.com>
+Copyright (C) 2020 Baptiste Dauphin <baptistedauphin@protonmail.com>
 
 :configuration: This module can be used by either passing an api_url and token
     directly or by specifying both in a configuration profile in the salt
