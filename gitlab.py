@@ -180,3 +180,11 @@ def project_create_variable(project_id,
         raise SaltInvocationError(
                   'formdata_fieldname must be set if formdata=True')
     return http_post(resource, data=post_data)
+
+def project_remove_variable(project_id, key):
+    resource = ('/projects/{0}/variables/{1}'
+                .format(project_id,
+                        key))
+
+    http_delete(resource)
+    return {}
