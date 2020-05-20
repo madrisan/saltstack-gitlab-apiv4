@@ -239,3 +239,29 @@ def project_set_variable(project_id, key, value, **kwargs):
     else:
         result = project_create_variable(project_id, key, value, **kwargs)
     return result
+
+def project_variables(project_id):
+    '''
+    Return the GitLab variable informations for a given project.
+
+    CLI Example:
+
+        .. code-block:: bash
+
+            salt * ugitlab.project_variables 1
+    '''
+    project_variables = {}
+    resource = '/projects/{0}/variables'.format(project_id)
+
+    try:
+        res = http_get(resource)
+        for data in res:
+           key = data['key']
+           data.pop('key')
+           project_variables[key] = data
+    except KeyError as err:
+        template = "An exception of type {0} occurred. Arguments: {1!r}"
+        message = template.format(type(err).__name__, err.args)
+        raise salt.exceptions.CommandExecutionError(message)
+
+    return project_variables
