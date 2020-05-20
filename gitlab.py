@@ -146,3 +146,37 @@ def http_put(path, data=None, **kwargs):
     Send a PUT request to GitLab API.
     """
     return _http_request('PUT', path, data=data, **kwargs)
+
+def project_create_variable(project_id,
+                            key,
+                            value,
+                            formdata=False,
+                            formdata_fieldname=None,
+                            masked=False,
+                            protected=False,
+                            variable_type='env_var',
+                            **kwargs):
+    '''
+    Create a new GitLab project variable.
+
+    CLI Example:
+
+        .. code-block:: bash
+
+            salt * ugitlab.project_create_variables 1 NEW_VARIABLE 'new value'
+    '''
+    resource = '/projects/{0}/variables'.format(project_id)
+    post_data = {
+        'key': key,
+        'masked': masked,
+        'protected': protected,
+        'value': value,
+        'variable_type': variable_type
+    }
+    if formdata and formdata_fieldname:
+        post_data['formdata'] = True
+        post_data['formdata_fieldname'] = formdata_fieldname
+    elif formdata and not formdata_fieldname:
+        raise SaltInvocationError(
+                  'formdata_fieldname must be set if formdata=True')
+    return http_post(resource, data=post_data)
