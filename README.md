@@ -17,6 +17,17 @@ This module requires a configuration profile to be configured in either the mini
 
 This Python module should be saved as `salt/_modules/gitlab.py`.
 
+## SaltStack usage
+```bash
+salt '*' ugitlab.project_create_variables 1 NEW_VARIABLE 'new value'
+
+salt '*' ugitlab.project_update_variable 1 NEW_VARIABLE value='updated value' protected=True
+
+salt '*' ugitlab.project_set_variable 1 NEW_VARIABLE 'my value'
+
+salt '*' ugitlab.project_variables 1
+```
+
 ## Implemented Methods
 
 | Parameter     | Description                                                                  |
