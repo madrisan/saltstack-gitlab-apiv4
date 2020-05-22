@@ -77,6 +77,8 @@ def project_variables(project_id):
 2. An example of a POST request:
 
 ```python
+from salt.exceptions import SaltInvocationError
+
 def project_create_variable(project_id,
                             key,
                             value,
@@ -154,7 +156,7 @@ def project_remove_variable(project_id, key):
     return {}
 ```
 
-4. An example of a GET request with streamed data:
+5. An example of a GET request with streamed data:
 
 ```python
 # Import Python libs
