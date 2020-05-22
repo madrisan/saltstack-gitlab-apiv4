@@ -17,17 +17,6 @@ This module requires a configuration profile to be configured in either the mini
 
 This Python module should be saved as `salt/_modules/gitlab.py`.
 
-## SaltStack usage
-```bash
-salt '*' ugitlab.project_create_variables 1 NEW_VARIABLE 'new value'
-
-salt '*' ugitlab.project_update_variable 1 NEW_VARIABLE value='updated value' protected=True
-
-salt '*' ugitlab.project_set_variable 1 NEW_VARIABLE 'my value'
-
-salt '*' ugitlab.project_variables 1
-```
-
 ## Implemented Methods
 
 | Parameter     | Description                                                                  |
@@ -119,6 +108,37 @@ def project_create_variable(project_id,
 ```
 
 3. An example of a PUT request:
+
+```python
+def project_update_variable(project_id, key, **kwargs):
+    """
+    Update an existing GitLab project variable.
+    """
+    resource = '/projects/{0}/variables/{1}'.format(project_id, key)
+
+    params = [
+        'environment_scope',
+        'masked',
+        'protected',
+        'value',
+        'variable_type'
+    ]
+    post_data = {}
+    for param in params:
+        try:
+            value = kwargs.pop(param)
+            post_data[param] = value
+        except:
+            pass
+
+    # add the all the kwargs but the ones automatically set by salt
+    extra_args = dict(
+        [(x, y) for x, y in kwargs.items() if not x.startswith('__')])
+
+    return __salt__['http_put'](resource, data=post_data, **extra_args)
+```
+
+4. An example of a DELETE request:
 
 ```python
 def project_remove_variable(project_id, key):
